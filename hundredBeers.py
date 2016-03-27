@@ -8,7 +8,7 @@ Add some new categories: Distribution Regions, Season, Rarity
 
 from html.parser import HTMLParser
 
-beerList = []
+beerList = []		#Will contain all the the beer objects
 
 class MyHTMLParser(HTMLParser):
 	inTable = False			# Indicates whether data falls within a table
@@ -52,6 +52,7 @@ class MyHTMLParser(HTMLParser):
 				#print("Adding: ", self.beer)
 				print("Adding: ", self.beer[(self.index+1)-len(self.categories):self.index+1])
 				beerList.append( Beer(self.categories.copy(), self.beer[(self.index+1)-len(self.categories):self.index+1]) )
+				# Display the most recent two beers added to the list. They should be different!!!
 				print("List: ", [ b.details for b in beerList ][-2:] )
 				#self.beer = []
 			self.index += 1
@@ -69,7 +70,7 @@ class Beer():
 
 parser = MyHTMLParser()
 
-brewfile = open("again.html" , 'r' )
+brewfile = open("beerTable.html" , 'r' )
 
 parser.feed("".join(brewfile.readlines() ) )
 #parser.close()
