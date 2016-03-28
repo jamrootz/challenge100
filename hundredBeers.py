@@ -58,8 +58,9 @@ class MyHTMLParser(HTMLParser):
 			self.index += 1
 
 class Beer():
-	details = {}
+	details = None
 	def __init__(self, catList, bList): # pass in list of categories from table headers
+		self.details = {}
 		for cat, element in zip(catList, bList): 
 			self.details[cat] = element
 	def showDetails(self):
