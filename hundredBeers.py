@@ -7,6 +7,7 @@ Add some new categories: Distribution Regions, Season, Rarity
 '''
 
 from html.parser import HTMLParser
+import json
 
 beerList = []		#Will contain all the the beer objects
 
@@ -45,20 +46,16 @@ class MyHTMLParser(HTMLParser):
 			#print("Category: ", data)
 			self.categories.append(data.strip())
 		elif self.inData and self.inTable:
-			print("Data: ", data)
+			#print("Data: ", data)
 			self.beer.append(data.strip())
 			# after appending the last trait for a beer, create a new beer object
 			if self.index % len(self.categories) == len(self.categories) -1:
-				#print("Adding: ", self.beer)
-				print("Adding: ", self.beer[(self.index+1)-len(self.categories):self.index+1])
-				beerList.append( Beer(self.categories.copy(), self.beer[(self.index+1)-len(self.categories):self.index+1]) )
+				#print("Adding: ", self.beer[(self.index+1)-len(self.categories):self.index+1])
+				beerList.append( Beer(self.categories, self.beer[(self.index+1)-len(self.categories):self.index+1]) )
 				# Display the most recent two beers added to the list. They should be different!!!
-				print("List: ", [ b.details for b in beerList ][-2:] )
-				#self.beer = []
 			self.index += 1
 
 class Beer():
-	details = None
 	def __init__(self, catList, bList): # pass in list of categories from table headers
 		self.details = {}
 		for cat, element in zip(catList, bList): 
@@ -68,15 +65,36 @@ class Beer():
 		print('\n\n')
 
 
+'''
+# If progress.json does not exist, create it from html input
 
-parser = MyHTMLParser()
-
-brewfile = open("beerTable.html" , 'r' )
-
-parser.feed("".join(brewfile.readlines() ) )
-#parser.close()
-
-brewfile.close()
-
+'''
+# If progress.json already exists, read and then overwrite it
+try:
+	brewfile = open("progress.json" , 'r' )
+	# The entries have been separated by |, do not use this character in any string objects
+	brews = brewfile.read().split('|')
+	for brew in brews[:-1]:			# The last element is a null string, omit
+		jBeer = json.loads(brew)
+		keys = []
+		values = []
+		for key in jBeer:
+			keys.append(key)
+			values.append(jBeer[key])
+		beerList.append( Beer(keys, values) )
+	brewfile.close()
+except FileNotFoundError:
+	brewfile = open("beerTable.html" , 'r' )
+	parser = MyHTMLParser()
+	parser.feed("".join(brewfile.readlines() ) )
+	brewfile.close()
 
 for brew in beerList: brew.showDetails()
+
+# Write the updated progress to our json file
+brewfile = open("progress.json", "w")
+#json.JSONEncoder().encode(beerList)
+for brew in beerList:
+	json.dump(brew.details, brewfile)
+	brewfile.write("|")
+brewfile.close()
