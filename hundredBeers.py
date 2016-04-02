@@ -10,6 +10,7 @@ from html.parser import HTMLParser
 import json
 
 beerList = []		#Will contain all the the beer objects
+extra_categories = ("Distribution", "Establishments", "Dates", "Availability")
 
 class MyHTMLParser(HTMLParser):
 	inTable = False			# Indicates whether data falls within a table
@@ -60,6 +61,12 @@ class Beer():
 		self.details = {}
 		for cat, element in zip(catList, bList): 
 			self.details[cat] = element
+		for cat in extra_categories:
+			if cat not in list(self.details.keys()):
+				self.details[cat] = ""
+		if self.details["Checkin"]:
+			self.details["Checkin"]= "True"
+		else: self.details["Checkin"]= "False"
 	def showDetails(self):
 		for d in list(self.details.keys()): print(d,": ", self.details[d])
 		print('\n\n')
