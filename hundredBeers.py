@@ -64,13 +64,27 @@ class Beer():
 		for cat in extra_categories:
 			if cat not in list(self.details.keys()):
 				self.details[cat] = ""
-		if self.details["Checkin"]:
+		if self.details["Checkin"] in ("True", "\u2713"):
 			self.details["Checkin"]= "True"
 		else: self.details["Checkin"]= "False"
 	def showDetails(self):
 		for d in list(self.details.keys()): print(d,": ", self.details[d])
 		print('\n\n')
 
+def create_webpage(beer2find):
+	page = open("index.html","w")
+	page.write("<html>\n<head><title>Beer Challenge</title></head>\n")
+	page.write("<body><h2 align=center>Beers left to find: %d</h2>\n<table width=80%% align=center border=1px>\n" % len(beer2find) )
+	for index, beer in enumerate(beer2find):
+		page.write("<tr>\n")
+		page.write("<td>%2d</td>" % (index+1))
+		page.write("<td> <em>%s</em> <br> <b>%s</b> </td>" % (beer.details["Beer"], beer.details["Brewery"]) )
+		page.write("<td> %s <br> <b>%s</b> </td>" % (beer.details["Style"], beer.details["State"]) )
+		page.write("<td> Where: %s <br> When: %s </td>" % (beer.details["Distribution"], beer.details["Dates"]) )
+		page.write("<td> Found: %s <br> %s </td>" % (beer.details["Establishments"], beer.details["Availability"]) )
+		page.write("</tr>\n")
+	page.write("</table>\n</body>\n</html>")
+	page.close()
 
 '''
 # If progress.json does not exist, create it from html input
@@ -96,7 +110,11 @@ except FileNotFoundError:
 	parser.feed("".join(brewfile.readlines() ) )
 	brewfile.close()
 
-for brew in beerList: brew.showDetails()
+#for brew in beerList: brew.showDetails()
+
+# Create list of beers yet to be found
+beer2find = [ beer for beer in beerList if beer.details["Checkin"] == "False" ]
+create_webpage(beer2find)
 
 # Write the updated progress to our json file
 brewfile = open("progress.json", "w")
