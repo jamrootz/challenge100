@@ -86,6 +86,33 @@ def create_webpage(beer2find):
 	page.write("</table>\n</body>\n</html>")
 	page.close()
 
+def clear_screen():
+	print("\n"*60)
+
+def show_options(beer2find):
+	clear_screen()
+	print("Which beer do you wish to modify?"+"\n"*3)
+	for index in range(round(len(beer2find)/2)):
+		print( str(index).rjust(20) + ". %(Brewery)-25s - %(Beer)-50s" % beer2find[index].details , end='')
+		if index + round(len(beer2find)/2) < len(beer2find):
+			print( str(index + round(len(beer2find)/2) ).rjust(20) + ". %(Brewery)-25s - %(Beer)s" % beer2find[(index+ round(len(beer2find)/2))].details )
+	opt = input("\n"*5 + "Enter the number of the beer (q=quit, a=add, u=uncheck): ")
+	return opt
+
+def edit_beer(beer):
+	clear_screen()
+	print("Selected %(Brewery)s (%(Beer)s) " % beer.details)
+	print("\n\n\n\tOptions:\n")
+	print("\t\t1. Check in")
+	print("\t\t2. Add Distribution Details")
+	print("\t\t3. Add Dates of availability")
+	print("\t\t4. Add Establishments carrying the beer")
+	print("\t\t5. Describe abundance of the beer")
+	print("\t\t6. Done")
+	choice = input("\n\n\nWhat would you like to do? ")
+	if choice == "1":
+		beer.details["Checkin"] = "True"
+
 '''
 # If progress.json does not exist, create it from html input
 
@@ -94,8 +121,10 @@ def create_webpage(beer2find):
 try:
 	brewfile = open("progress.json" , 'r' )
 	# The entries have been separated by |, do not use this character in any string objects
-	brews = brewfile.read().split('|')
-	for brew in brews[:-1]:			# The last element is a null string, omit
+	#brews = brewfile.read().split('|')
+	#for brew in brews[:-1]:			# The last element is a null string, omit
+	brews = brewfile.readlines()
+	for brew in brews:
 		jBeer = json.loads(brew)
 		keys = []
 		values = []
@@ -113,7 +142,29 @@ except FileNotFoundError:
 #for brew in beerList: brew.showDetails()
 
 # Create list of beers yet to be found
-beer2find = [ beer for beer in beerList if beer.details["Checkin"] == "False" ]
+opt=None
+while not opt == 'q':
+	beer2find = [ beer for beer in beerList if beer.details["Checkin"] == "False" ]
+	opt = show_options(beer2find)
+	try:
+		num = int(opt)
+		if num in range(len(beer2find)):
+			# edit that beer
+			edit_beer(beer2find[num])
+		else:
+			# Give a warning and/or quit
+			pass
+	except ValueError:
+		# It was not a number so should be a control character
+		if opt.lower() == 'a':
+			# Add beer routine
+			pass
+		elif opt.lower() == 'u':
+			# Uncheck beer routine
+			pass
+		elif opt.lower() == 'q':
+			# Quit routine
+			pass
 create_webpage(beer2find)
 
 # Write the updated progress to our json file
@@ -121,5 +172,5 @@ brewfile = open("progress.json", "w")
 #json.JSONEncoder().encode(beerList)
 for brew in beerList:
 	json.dump(brew.details, brewfile)
-	brewfile.write("|")
+	brewfile.write("\n")
 brewfile.close()
