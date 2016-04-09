@@ -8,6 +8,7 @@ Add some new categories: Distribution Regions, Season, Rarity
 
 from html.parser import HTMLParser
 import json
+import math
 
 beerList = []		#Will contain all the the beer objects
 extra_categories = ("Distribution", "Establishments", "Dates", "Availability")
@@ -53,7 +54,6 @@ class MyHTMLParser(HTMLParser):
 			if self.index % len(self.categories) == len(self.categories) -1:
 				#print("Adding: ", self.beer[(self.index+1)-len(self.categories):self.index+1])
 				beerList.append( Beer(self.categories, self.beer[(self.index+1)-len(self.categories):self.index+1]) )
-				# Display the most recent two beers added to the list. They should be different!!!
 			self.index += 1
 
 class Beer():
@@ -70,6 +70,14 @@ class Beer():
 	def showDetails(self):
 		for d in list(self.details.keys()): print(d,": ", self.details[d])
 		print('\n\n')
+
+def add_beer(sample):
+	clear_screen()
+	print("Adding a beer\n\n\n")
+	categories = list(sample.details.keys())
+	values = [ input("Enter %s: " % cat) for cat in categories ]
+	beer = Beer(categories, values)
+	return beer
 
 def create_webpage(beer2find):
 	page = open("index.html","w")
@@ -92,12 +100,12 @@ def clear_screen():
 def show_options(beer2find):
 	clear_screen()
 	print("Which beer do you wish to modify?"+"\n"*3)
-	for index in range(round(len(beer2find)/2)):
-		print( str(index).rjust(20) + ". %(Brewery)-25s - %(Beer)-50s" % beer2find[index].details , end='')
-		if index + round(len(beer2find)/2) < len(beer2find):
-			print( str(index + round(len(beer2find)/2) ).rjust(20) + ". %(Brewery)-25s - %(Beer)s" % beer2find[(index+ round(len(beer2find)/2))].details )
-	opt = input("\n"*5 + "Enter the number of the beer (q=quit, a=add, u=uncheck): ")
-	return opt
+	for index in range(math.ceil(len(beer2find)/2)):
+		print( str(index).rjust(15) + ". %(Brewery)-25s - %(Beer)-50s" % beer2find[index].details , end='')
+		if index + math.ceil(len(beer2find)/2) < len(beer2find):
+			print( str(index + math.ceil(len(beer2find)/2) ).rjust(15) + ". %(Brewery)-25s - %(Beer)s" % beer2find[(index+ math.ceil(len(beer2find)/2))].details )
+	opt = input("\n"*5 + "Enter the number of the beer (q=quit, a=add, u=uncheck, b=brewery sort, s=state sort): ")
+	return opt.lower()
 
 def edit_beer(beer):
 	clear_screen()
@@ -120,9 +128,6 @@ def edit_beer(beer):
 # If progress.json already exists, read and then overwrite it
 try:
 	brewfile = open("progress.json" , 'r' )
-	# The entries have been separated by |, do not use this character in any string objects
-	#brews = brewfile.read().split('|')
-	#for brew in brews[:-1]:			# The last element is a null string, omit
 	brews = brewfile.readlines()
 	for brew in brews:
 		jBeer = json.loads(brew)
@@ -141,9 +146,9 @@ except FileNotFoundError:
 
 #for brew in beerList: brew.showDetails()
 
-# Create list of beers yet to be found
 opt=None
 while not opt == 'q':
+	# Create list of beers yet to be found
 	beer2find = [ beer for beer in beerList if beer.details["Checkin"] == "False" ]
 	opt = show_options(beer2find)
 	try:
@@ -156,13 +161,19 @@ while not opt == 'q':
 			pass
 	except ValueError:
 		# It was not a number so should be a control character
-		if opt.lower() == 'a':
+		if opt == 'a':
 			# Add beer routine
-			pass
-		elif opt.lower() == 'u':
+			beerList.append( add_beer(beer2find[0]) )
+		elif opt == 'u':
 			# Uncheck beer routine
 			pass
-		elif opt.lower() == 'q':
+		elif opt == 'b':
+			# Sort by brewery routine
+			beerList = sorted(beerList, key=lambda k: k.details['Brewery'])
+		elif opt == 's':
+			# Sort by state routine
+			beerList = sorted(beerList, key=lambda k: k.details['State'])
+		elif opt == 'q':
 			# Quit routine
 			pass
 create_webpage(beer2find)
