@@ -80,7 +80,7 @@ def add_beer(sample):
 	return beer
 
 def create_webpage(beer2find):
-	page = open("index.html","w")
+	page = open("gh-pages/index.html","w")
 	page.write("<html>\n<head><title>Beer Challenge</title></head>\n")
 	page.write("<body><h2 align=center>Beers left to find: %d</h2>\n<table width=80%% align=center border=1px>\n" % len(beer2find) )
 	for index, beer in enumerate(beer2find):
