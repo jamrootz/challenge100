@@ -11,7 +11,7 @@ import json
 import math
 
 beerList = []		#Will contain all the the beer objects
-extra_categories = ("Distribution", "Establishments", "Dates", "Availability")
+extra_categories = ("Distribution", "Establishments", "Dates", "Availability", "highlight")
 
 class MyHTMLParser(HTMLParser):
 	inTable = False			# Indicates whether data falls within a table
@@ -82,14 +82,17 @@ def add_beer(sample):
 def create_webpage(beer2find):
 	page = open("gh-pages/index.html","w")
 	page.write("<html>\n<head><title>Beer Challenge</title></head>\n")
-	page.write("<body><h2 align=center>Beers left to find: %d</h2>\n<table width=80%% align=center border=1px>\n" % len(beer2find) )
+	page.write("<body><h2 align=center>Beers left to find: %d</h2>\n<table width=100%% align=center border=1px>\n" % len(beer2find) )
 	for index, beer in enumerate(beer2find):
-		page.write("<tr>\n")
+		if beer.details["highlight"] == "True":
+			page.write("<tr bgcolor=yellow>\n")
+		else:
+			page.write("<tr>\n")
 		page.write("<td>%2d</td>" % (index+1))
 		page.write("<td> <em>%s</em> <br> <b>%s</b> </td>" % (beer.details["Beer"], beer.details["Brewery"]) )
 		page.write("<td> %s <br> <b>%s</b> </td>" % (beer.details["Style"], beer.details["State"]) )
-		page.write("<td> Where: %s <br> When: %s </td>" % (beer.details["Distribution"], beer.details["Dates"]) )
-		page.write("<td> Found: %s <br> %s </td>" % (beer.details["Establishments"], beer.details["Availability"]) )
+		page.write("<td width=35%%> Where: %s <br> When: %s </td>" % (beer.details["Distribution"], beer.details["Dates"]) )
+		page.write("<td width=35%%> Found: %s <br> %s </td>" % (beer.details["Establishments"], beer.details["Availability"]) )
 		page.write("</tr>\n")
 	page.write("</table>\n</body>\n</html>")
 	page.close()
@@ -104,7 +107,7 @@ def show_options(beer2find):
 		print( str(index).rjust(15) + ". %(Brewery)-25s - %(Beer)-50s" % beer2find[index].details , end='')
 		if index + math.ceil(len(beer2find)/2) < len(beer2find):
 			print( str(index + math.ceil(len(beer2find)/2) ).rjust(15) + ". %(Brewery)-25s - %(Beer)s" % beer2find[(index+ math.ceil(len(beer2find)/2))].details )
-	opt = input("\n"*5 + "Enter the number of the beer (q=quit, a=add, u=uncheck, b=brewery sort, s=state sort): ")
+	opt = input("\n"*5 + "Enter the number of the beer (q=quit, a=add, u=uncheck, c=clear highlights, b=brewery sort, s=state sort): ")
 	return opt.lower()
 
 def edit_beer(beer):
@@ -116,10 +119,20 @@ def edit_beer(beer):
 	print("\t\t3. Add Dates of availability")
 	print("\t\t4. Add Establishments carrying the beer")
 	print("\t\t5. Describe abundance of the beer")
-	print("\t\t6. Done")
+	print("\t\t6. Toggle Highlight (%(highlight)s)" % beer.details)
+	print("\t\t7. Done")
 	choice = input("\n\n\nWhat would you like to do? ")
 	if choice == "1":
 		beer.details["Checkin"] = "True"
+	elif choice == "6":
+		if beer.details["highlight"] == "True":
+			beer.details["highlight"] = ""
+		else: beer.details["highlight"] = "True"
+
+def clear_highlights(beers):
+	# Set 'highlight' key of each beer detail to "" to clear state
+	for beer in beers:
+		beer.details["highlight"] = ""
 
 '''
 # If progress.json does not exist, create it from html input
@@ -131,6 +144,8 @@ try:
 	brews = brewfile.readlines()
 	for brew in brews:
 		jBeer = json.loads(brew)
+		#keys = ["highlight"]
+		#values = [""]
 		keys = []
 		values = []
 		for key in jBeer:
@@ -167,6 +182,9 @@ while not opt == 'q':
 		elif opt == 'u':
 			# Uncheck beer routine
 			pass
+		elif opt == 'c':
+			# Unhighlight all selections
+			clear_highlights(beerList)
 		elif opt == 'b':
 			# Sort by brewery routine
 			beerList = sorted(beerList, key=lambda k: k.details['Brewery'])
